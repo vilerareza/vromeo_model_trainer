@@ -1,0 +1,28 @@
+<DataListBox>:
+    dataListLayout : data_list_layout
+    orientation: 'vertical'
+    canvas:
+        Color:
+            rgb: 0.5, 0.5, 0.5
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    
+    FloatLayout:
+        id : label_float
+        size_hint : (1, None)
+        height : 40
+        Label:
+            size_hint : (None, None)
+            size: self.texture_size
+            font_size: 17
+            font_family: "arial"
+            markup: True
+            text: 'Training Dataset'
+            x: root.x + 10
+            top: root.top - 20
+
+    DataListLayout:
+        id : data_list_layout
+        padding: [20]
+        spacing: 10

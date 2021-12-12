@@ -1,0 +1,54 @@
+<ImageViewerBox>:
+    labelBox : label_box
+    imageGrid : image_grid
+
+    orientation: 'vertical'
+    canvas:
+        Color:
+            rgb: 0.3, 0.3, 0.3
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    
+    BoxLayout:
+        labelBoxLabel : label_box_label
+        id : label_box
+        size_hint: (1, 0.08)
+        Label:
+            id : label_box_label
+            multiline : False
+            font_size: 18
+            font_family: "arial"
+    
+    ImageGrid:
+        id : image_grid
+        rows: 1
+        spacing : 5
+        padding : [10]
+        size_hint: (1, 1)
+
+    FloatLayout:
+        id: button_float
+        size_hint: (1, 0.1)
+        ImageButton:
+            id: data_cancel_button
+            source: "images/cancelbutton.png"
+            size_hint: None, None
+            size: 30, 30
+            right : data_confirm_button.x-5
+            y : button_float.y+3
+            text : 'Cancel'
+            on_press: root.button_press_callback(self) 
+            on_release : root.button_release_callback(self)  
+        ImageButton:
+            id: data_confirm_button
+            source: "images/confirmbutton.png"
+            size_hint: None, None
+            size: 180, 30
+            center_x : button_float.center_x
+            y : button_float.y+3
+            text : 'Confirm'
+            on_press: root.button_press_callback(self) 
+            on_release : root.button_release_callback(self), app.manager.add_to_dataset()
+
+<ImageButton@ButtonBehavior+Image>:

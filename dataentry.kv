@@ -1,0 +1,75 @@
+
+<DataEntryBox>:
+    titleLabel: title_label
+    dataLocationText: data_location_text
+    dataLocationButton: data_location_button
+    dataLabelText: datalabel_text
+    dataReviewButton: data_review_button
+
+    size_hint: 1, 0.5
+    canvas:
+        Color:
+            rgb: 0.2, 0.2, 0.2
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    
+    Label:
+        id: title_label
+        size_hint: None, None
+        size: self.texture_size
+        font_size: 17
+        font_family: "arial"
+        markup: True
+        text: "Add New Data"
+        x: root.x + 40
+        top: root.top - 20
+    
+    TextInput:
+        id: data_location_text
+        size_hint: None, None
+        size: dp(200), dp(30)
+        background_color: 0.9, 0.9, 0.9
+        multiline : False
+        font_size: 16
+        font_family: "arial"
+        hint_text: "File Directory Location"
+        x: title_label.x
+        top: title_label.y - dp(20)     # 20 pixel from the top
+    
+    ImageButton:
+        id: data_location_button
+        source: "images/selectfile.png"
+        mipmap : True
+        size_hint: None, None
+        size: dp(30), dp(30)
+        y: data_location_text.y
+        x: data_location_text.right + dp(5) # 5 pixel from the right side of the text input
+        on_press: root.button_press_callback(self)
+        on_release: root.show_load_dialog(self)
+    
+    TextInput:
+        id: datalabel_text
+        size_hint: None, None
+        size: dp(200), dp(30)
+        background_color: 0.9, 0.9, 0.9
+        multiline : False
+        font_size: 16
+        font_family: "arial"
+        hint_text: "Label Text"
+        x: data_location_button.right + dp(30) #30 pixel from the right side of button
+        top: title_label.y - dp(20) #20 pixel from the top
+
+    ImageButton:
+        id: data_review_button
+        source: "images/reviewbutton.png"
+        mipmap : False
+        size_hint: None, None
+        size: 200, 30
+        top: data_location_text.y - dp(20)    # 40 pixel below data location text 
+        center_x: root.center_x # center of layout
+        on_press: root.button_press_callback(self)
+        on_release : app.manager.review_data(self)
+        
+
+<ImageButton@ButtonBehavior+Image>:

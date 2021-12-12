@@ -1,0 +1,31 @@
+<DataItem>:
+    dataLabel : data_label
+    dataImage : data_image
+    orientation : 'vertical'
+    size_hint : None,None
+    size : 80, 100
+    
+    BoxLayout :
+        size_hint : (1, 0.2) 
+        canvas:
+            Color:
+                rgb: 0.4, 0.4, 0.4
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        Label :
+            id : data_label
+
+    FloatLayout :
+        id : data_image_float
+        size_hint : (None, 1) 
+        width : 80
+        Image :
+            id : data_image
+            size_hint : None, None
+            size : 70,70
+            center_x : data_image_float.center_x
+            center_y : data_image_float.center_y
+
+    
+            

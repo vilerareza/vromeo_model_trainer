@@ -1,0 +1,91 @@
+<DataTrainingBox>:
+    size_hint : 1, None
+    height : dp(100)
+    canvas:
+        Color:
+            rgb: 0.7, 0.7, 0.7
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    ImageButton:
+        id: training_start_button
+        source: "images/starttraining.png"
+        size_hint: None, None
+        size: 180, 30
+        center_x: root.center_x # center of layout
+        center_y: root.center_y # center of layout
+        on_press: root.button_press_callback(self)
+        on_release : root.button_release_callback(self), app.manager.start_model_training()
+    
+    ImageButton:
+        id: save_model_button
+        source: "images/savemodel.png"
+        mipmap : False
+        size_hint: None, None
+        size: 150, 30
+        center_y: root.center_y # center of layout
+        x: training_start_button.right + 10
+        on_press: root.button_press_callback(self)
+        on_release : root.button_release_callback(self), app.manager.save_model_to_file()
+
+    Label:
+        id: epoch_label
+        size_hint: None, None
+        size: 70, 40
+        font_size: 17
+        font_family: "arial"
+        color: (0.2, 0.2, 0.2)
+        text : "Epoch:"
+        markup: True
+        center_y: root.center_y # center of layout
+        right: training_start_button.x - 120
+
+    Label:
+        id : epoch_value
+        size_hint: None, None
+        size: 40, 40
+        font_size: 20
+        font_family: "arial"
+        color: (0.2, 0.2, 0.2)
+        bold: True
+        text : str(root.nEpoch)
+        markup: True
+        center_y: root.center_y # center of layout
+        x: epoch_label.right
+        
+    ImageButton:
+        id: epoch_up_button
+        source: "images/epochup.png"
+        size_hint: None, None
+        size: 20, 20
+        center_y: root.center_y + 15
+        x: epoch_value.right + 10
+        on_press: root.button_press_callback(self)
+        on_release : root.button_release_callback(self)
+
+    ImageButton:
+        id: epoch_down_button
+        source: "images/epochdown.png"
+        size_hint: None, None
+        size: 20, 20
+        center_y: root.center_y - 15
+        x: epoch_value.right + 10
+        on_press: root.button_press_callback(self)
+        on_release : root.button_release_callback(self)
+
+    Label:
+        id : training_result_label
+        font_size: 16
+        font_family: "arial"
+        color: (0.2, 0.2, 0.2)
+        text : 'Training Accuracy Result'
+        markup: True
+        size_hint : None, None
+        height: self.texture_size[1]
+        width: 100 
+        opacity : 0
+        y : root.y+dp(10)
+        center_x : training_start_button.center_x
+
+<ImageButton@ButtonBehavior+Image>:
