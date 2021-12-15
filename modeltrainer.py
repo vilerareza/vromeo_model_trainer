@@ -1,5 +1,6 @@
 import os
 import random
+import uuid
 
 import numpy as np
 from cv2 import imwrite, rectangle
@@ -36,6 +37,7 @@ class ModelTrainer(BoxLayout):
     dataset = {}
     datasetImages = []
     datasetLabels = []
+    nClasses = 0
 
     
     def __init__(self, **kwargs):
@@ -72,17 +74,16 @@ class ModelTrainer(BoxLayout):
         # Clear previous data
         self.clear_preview_images('images/temp/preview/', self.imageViewerBox.imageGrid)
         # Process the data for review
-        if (os.path.isdir(self.selectedPath) or  self.newLabel==''):
+        if (os.path.isdir(self.selectedPath) and self.newLabel!=''):
             # Directory and label valid
             self.imageViewerBox.print_label(self.newLabel)
             imageFiles = os.listdir(self.selectedPath)
             #self.progress_step = round(100 / (len(images) * self.nProcess))
 
-            for i in range(len(imageFiles)):
-                imageFile = imageFiles[i]
+            for imageFile in imageFiles:
                 filePath = os.path.join(self.selectedPath, imageFile)
                 img, detectionBox = self.imageProcessor.detect_face(filePath)
-                self.create_preview_image(img, box = detectionBox, destinationName = str(i))    
+                self.create_preview_image(img, box = detectionBox)    
             
             self.draw_image_to_grid(self.imageViewerBox.imageGrid)
         else:
@@ -117,8 +118,10 @@ class ModelTrainer(BoxLayout):
                 # Add the image
                 gridLayout.add_widget(Image(source = os.path.join(imagePath, imageFile)))
 
-    def create_preview_image(self, img, box, destinationName):
-        previewImagePath = (f'images/temp/preview/{destinationName}.png')
+    def create_preview_image(self, img, box):
+        # Generate random uuid for file name
+        uuidName = uuid.uuid4()
+        previewImagePath = (f'images/temp/preview/{uuidName}.png')
         if box:
             xb, yb, widthb, heightb = box
             rectangle(img, (xb, yb), (xb+widthb, yb+heightb), color = (232,164,0), thickness = 3)
@@ -142,9 +145,9 @@ class ModelTrainer(BoxLayout):
         # Create file for every image data in faceList
         saveTempPath = 'images/temp/dataset/'
         self.clear_preview_images(saveTempPath)
-        for i in range(len(faceList)):
-            img = faceList[i]
-            writePath = (f'{saveTempPath}{str(i)}.png')
+        for img in faceList:
+            uuidName = uuid.uuid4()
+            writePath = (f'{saveTempPath}{uuidName}.png')
             imwrite(writePath, img)
         # draw the new data to the list 
         self.dataListBox.add_item(label, saveTempPath, dataColor)
@@ -164,12 +167,15 @@ class ModelTrainer(BoxLayout):
     def start_model_training(self):
         # get training parameter: model, epoch
         if not self.model:
-            self.model = self.create_model()
+            self.nClasses = len(self.dataset)
+            self.model = self.create_model(self.nClasses)
+            print (f'nClasses: {self.nClasses}')
         if self.model:
             # Get epoch
             self.nEpoch = self.get_epoch()
             # Configure for training
-            self.model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+            from tensorflow.keras import optimizers
+            self.model.compile(optimizer= optimizers.Adam(learning_rate = 1e-4), loss='categorical_crossentropy', metrics=['categorical_accuracy'])
             # Get training data
             self.datasetImages, self.datasetLabels = self.get_training_data()
             print (str(len(self.datasetImages))+', '+str(type(self.datasetImages)))
@@ -177,15 +183,16 @@ class ModelTrainer(BoxLayout):
             # Start the training
             # import pickle
             # pickle.dump(self.datasetImages,open("datasetimages.p", "wb"))
+            # pickle.dump(self.datasetLabels,open("datasetlabels.p", "wb"))
             # print('pickle done')
-            history = self.model.fit(self.datasetImages, self.datasetLabels, epochs = self.nEpoch, batch_size = 2)   #Batch Size?
-            accuracy = int((history.history['accuracy'][-1])*100)
+            history = self.model.fit(self.datasetImages, self.datasetLabels, epochs = self.nEpoch, batch_size = len(self.datasetImages))   #Batch Size?
+            accuracy = int((history.history['categorical_accuracy'][-1])*100)
             self.dataTrainingBox.display_accuracy(str(accuracy))
             #print (str(accuracy))
 
-    def create_model (self):
+    def create_model (self, nClasses):
         from vggface import VGGFace
-        model = VGGFace().model
+        model = VGGFace(nClasses).model
         return model
     
     def get_epoch(self):
@@ -209,7 +216,7 @@ class ModelTrainer(BoxLayout):
         # Encode the label
         preprocess_label = preprocessing.LabelEncoder()
         datasetLabels = preprocess_label.fit_transform(datasetLabels)
-        datasetLabels = to_categorical(datasetLabels, num_classes = 2622)
+        datasetLabels = to_categorical(datasetLabels, num_classes = self.nClasses)
         return datasetImages, datasetLabels
 
     def save_model_to_file(self):
