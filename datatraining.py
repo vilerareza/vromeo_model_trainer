@@ -2,13 +2,14 @@ from kivy.graphics import Color, Rectangle
 from kivy.lang import Builder
 from kivy.metrics import dp
 from kivy.uix.floatlayout import FloatLayout
-from kivy.properties import NumericProperty
+from kivy.properties import NumericProperty, ObjectProperty
 
 Builder.load_file('datatraining.kv')
 
 class DataTrainingBox(FloatLayout):
    
-    nEpoch = NumericProperty(1)
+    nEpoch = NumericProperty()
+    epochText = ObjectProperty(None)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -32,16 +33,18 @@ class DataTrainingBox(FloatLayout):
         elif button == self.ids.epoch_up_button:
             button.source = "images/epochup.png"
             self.change_epoch(button)
+            print(self.nEpoch)
         elif button == self.ids.epoch_down_button:
             button.source = "images/epochdown.png"
             self.change_epoch(button)
+            print(self.nEpoch)
 
     def change_epoch(self, button):
+        self.nEpoch = int(self.epochText.text)
         if button == self.ids.epoch_up_button:
-            if self.nEpoch < 20:
-                self.nEpoch += 1
+            self.nEpoch += 1
         elif button == self.ids.epoch_down_button:
-            if self.nEpoch > 1:
+            if self.nEpoch > 0:
                 self.nEpoch -= 1
 
     def display_accuracy(self, accuracy = ''):

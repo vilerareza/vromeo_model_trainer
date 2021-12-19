@@ -1,6 +1,7 @@
 <DataTrainingBox>:
     size_hint : 1, None
     height : dp(100)
+    epochText : epoch_value
     canvas:
         Color:
             rgb: 0.7, 0.7, 0.7
@@ -10,17 +11,17 @@
 
     ImageButton:
         id: training_start_button
-        source: "images/starttraining.png"
         size_hint: None, None
         size: 180, 30
         center_x: root.center_x # center of layout
         center_y: root.center_y # center of layout
         on_press: root.button_press_callback(self)
         on_release : root.button_release_callback(self), app.manager.start_model_training()
+        disabled : True
+        source: "images/starttrainingdisabled.png"
     
     ImageButton:
         id: save_model_button
-        source: "images/savemodel.png"
         mipmap : False
         size_hint: None, None
         size: 150, 30
@@ -28,6 +29,8 @@
         x: training_start_button.right + 10
         on_press: root.button_press_callback(self)
         on_release : root.button_release_callback(self), app.manager.save_model_to_file()
+        disabled : True
+        source: "images/savemodeldisabled.png"
 
     Label:
         id: epoch_label
@@ -39,17 +42,19 @@
         text : "Epoch:"
         markup: True
         center_y: root.center_y # center of layout
-        right: training_start_button.x - 120
+        right: training_start_button.x - 140
 
-    Label:
+    TextInput:
         id : epoch_value
         size_hint: None, None
-        size: 40, 40
+        size: 60, 40
         font_size: 20
         font_family: "arial"
+        background_color: 0.9, 0.9, 0.9
         color: (0.2, 0.2, 0.2)
         bold: True
         text : str(root.nEpoch)
+        halign : "center"
         markup: True
         center_y: root.center_y # center of layout
         x: epoch_label.right

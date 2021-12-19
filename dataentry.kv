@@ -62,14 +62,15 @@
 
     ImageButton:
         id: data_review_button
-        source: "images/reviewbutton.png"
         mipmap : False
         size_hint: None, None
         size: 200, 30
         top: data_location_text.y - dp(20)    # 40 pixel below data location text 
         center_x: root.center_x # center of layout
         on_press: root.button_press_callback(self)
-        on_release : app.manager.review_data(self)
+        on_release : app.manager.progressUp(app.manager.review_data)
+        disabled: True if data_location_text.text == '' or datalabel_text.text == '' else False
+        source: "images/reviewbuttondisabled.png" if data_review_button.disabled == True else "images/reviewbutton.png" 
         
 
 <ImageButton@ButtonBehavior+Image>:

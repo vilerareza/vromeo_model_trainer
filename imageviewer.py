@@ -9,6 +9,8 @@ Builder.load_file('imageviewer.kv')
 class ImageViewerBox(BoxLayout):
     labelBox = ObjectProperty(None)
     imageGrid = ObjectProperty(None)
+    dataCancelButton = ObjectProperty(None)
+    dataConfirmButton = ObjectProperty(None)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

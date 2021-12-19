@@ -1,5 +1,7 @@
 import os
 import random
+import uuid
+import threading
 
 import numpy as np
 from cv2 import imwrite, rectangle
@@ -8,6 +10,9 @@ from kivy.metrics import dp
 from kivy.properties import NumericProperty, ObjectProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.image import Image
+from kivy.uix.popup import Popup
+from kivy.uix.progressbar import ProgressBar 
+from kivy.clock import Clock, mainthread
 
 from dataentry import DataEntryBox
 from datalist import DataListBox
@@ -53,43 +58,82 @@ class ModelTrainer(BoxLayout):
         # Adding to left box
         self.leftBox.add_widget(self.dataEntryBox)
         self.leftBox.add_widget(self.imageViewerBox)
+
         # Adding to container box
         self.middleContainerBox.add_widget(self.leftBox)
         self.middleContainerBox.add_widget(self.dataListBox)
+
+        # Progress bar
+        self.progressBar = ProgressBar()
+        self.progressPop = Popup(content = self.progressBar,
+                                 size_hint=(0.5, 0.2),
+                                 auto_dismiss = False)
+        self.progress_value = 0
+        self.thread_flag = False
+
         # Show logo bar
         self.add_widget(self.logoBar)
         # Show container box
         self.add_widget(self.middleContainerBox)
         # Show data training box
         self.add_widget(self.dataTrainingBox)
+    
+    def progressUp(self, target_function):
+        print(target_function)
+        self.progressPop.open()
+        self.thread_flag = True
+        self.ev = threading.Event()
+        self.thread = threading.Thread(target = target_function)
+        self.thread.start()
+    
+    def dismiss(self, *args):
+        self.ev.clear()
+        self.thread_flag = False
+        self.progressPop.dismiss()
+    
+    def clock(self, *args):
+        #Stops the clock when the progress bar value reaches its maximum
+        if self.progress_value >= 100:
+            Clock.unschedule(self.clock)
+        self.progressBar.value = self.progress_value
 
-    def review_data(self, data_review_button):
-        # Get data directory and path
-        self.selectedPath, self.newLabel = self.get_data_entry()
-        # Create image processor object if none
-        if not self.imageProcessor:
-            self.imageProcessor = self.create_image_processor()
-        # Clear previous data
-        self.clear_preview_images('images/temp/preview/', self.imageViewerBox.imageGrid)
-        # Process the data for review
-        if (os.path.isdir(self.selectedPath) or  self.newLabel==''):
-            # Directory and label valid
-            self.imageViewerBox.print_label(self.newLabel)
-            imageFiles = os.listdir(self.selectedPath)
-            #self.progress_step = round(100 / (len(images) * self.nProcess))
+    
+    def review_data(self):
+        # Initialize progress bar value
+        self.progress_value = 0
+        Clock.schedule_interval(self.clock, 1 / 60)
+        self.progressPop.title = 'Recognize your images'
+        if self.thread_flag:
+            # Get data directory and path
+            self.selectedPath, self.newLabel = self.get_data_entry()
 
-            for i in range(len(imageFiles)):
-                imageFile = imageFiles[i]
-                filePath = os.path.join(self.selectedPath, imageFile)
-                img, detectionBox = self.imageProcessor.detect_face(filePath)
-                self.create_preview_image(img, box = detectionBox, destinationName = str(i))    
-            
-            self.draw_image_to_grid(self.imageViewerBox.imageGrid)
-        else:
-            print ('Unable to process. Invalid path or empty label')
-        # Change button appearance
-        data_review_button.source = "images/reviewbutton.png"
-        #self.dismiss()
+            # Create image processor object if none
+            if not self.imageProcessor:
+                self.imageProcessor = self.create_image_processor()
+
+            # Clear previous data
+            self.clear_preview_images('images/temp/preview/', self.imageViewerBox.imageGrid)
+
+            # Process the data for review
+            if (os.path.isdir(self.selectedPath) and self.newLabel!=''):
+                # Directory and label valid
+                imageFiles = os.listdir(self.selectedPath)
+                self.progress_step = round(90 / (len(imageFiles * 2)))
+                self.imageViewerBox.print_label(self.newLabel)
+                self.progress_value += 5
+                for imageFile in imageFiles:
+                    filePath = os.path.join(self.selectedPath, imageFile)
+                    img, detectionBox = self.imageProcessor.detect_face(filePath)
+                    self.progress_value += self.progress_step
+                    self.create_preview_image(img, box = detectionBox)
+                    self.progress_value += self.progress_step    
+                
+                self.draw_image_to_grid(self.imageViewerBox.imageGrid)
+                self.progress_value += 5
+            else:
+                print ('Unable to process. Invalid path or empty label')
+
+        self.dismiss()
 
     def get_data_entry(self):
         # Get selected directory
@@ -102,6 +146,7 @@ class ModelTrainer(BoxLayout):
     def create_image_processor(self):
         return ImageProcessor()
 
+    @mainthread
     def draw_image_to_grid(self, gridLayout):
         imagePath = 'images/temp/preview/'
         imageFiles = os.listdir(imagePath)
@@ -116,6 +161,9 @@ class ModelTrainer(BoxLayout):
                     gridLayout.rows +=1
                 # Add the image
                 gridLayout.add_widget(Image(source = os.path.join(imagePath, imageFile)))
+        
+        self.imageViewerBox.dataCancelButton.disabled = False
+        self.imageViewerBox.dataConfirmButton.disabled = False
 
     def create_preview_image(self, img, box, destinationName):
         previewImagePath = (f'images/temp/preview/{destinationName}.png')
@@ -135,6 +183,7 @@ class ModelTrainer(BoxLayout):
     def add_data(self, dataset, label, faceList):
         dataset[label] = faceList
 
+    @mainthread
     def add_to_list(self, dataset, label):
         # Prepare random color for databox in the list
         dataColor = (random.random(), random.random(), random.random())
@@ -150,16 +199,26 @@ class ModelTrainer(BoxLayout):
         self.dataListBox.add_item(label, saveTempPath, dataColor)
 
     def add_to_dataset(self):
-        imageFiles = os.listdir(self.selectedPath)
-        #self.progress_step = round(100 / (len(images) * self.nProcess))
-        faceList=[]
-        for imageFile in imageFiles:
-            filePath = os.path.join(self.selectedPath, imageFile)
-            face = self.imageProcessor.extract_face(filePath)
-            if face is not None:
-                faceList.append(face)
-        self.add_data(dataset = self.dataset, label = self.newLabel, faceList = faceList)
-        self.add_to_list(dataset = self.dataset, label = self.newLabel)
+        self.progress_value = 0
+        Clock.schedule_interval(self.clock, 1 / 60)
+        self.progressPop.title = 'Adding your images to the database'
+        if self.thread_flag:
+            imageFiles = os.listdir(self.selectedPath)
+            self.progress_step = round(90 / len(imageFiles))
+            faceList=[]
+            for imageFile in imageFiles:
+                filePath = os.path.join(self.selectedPath, imageFile)
+                face = self.imageProcessor.extract_face(filePath)
+                if face is not None:
+                    faceList.append(face)
+                    self.progress_value += self.progress_step
+
+            self.add_data(dataset = self.dataset, label = self.newLabel, faceList = faceList)
+            self.progress_value += 5
+            self.add_to_list(dataset = self.dataset, label = self.newLabel)
+            self.progress_value += 5
+        
+        self.dismiss()
 
     def start_model_training(self):
         # get training parameter: model, epoch
