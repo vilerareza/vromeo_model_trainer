@@ -1,3 +1,4 @@
+
 <ImageViewerBox>:
     labelBox : label_box
     imageGrid : image_grid
@@ -28,6 +29,18 @@
         spacing : 5
         padding : [10]
         size_hint: (1, 1)
+        color: 1,1,1,1
+        
+
+    # Image:
+    #     id: add_image_grid
+    #     ImageButton:
+    #         source: "images/cancelbutton.png"
+    #         id: remove_button
+    #         size_hint: None, None
+    #         size: 30, 30
+    #         pos_hint: {'right': 1, 'top': 1}
+
 
     FloatLayout:
         id: button_float
@@ -40,8 +53,8 @@
             y : button_float.y+3
             text : 'Cancel'
             on_press: root.button_press_callback(self) 
-            on_release : root.button_release_callback(self) 
-            disabled : True 
+            on_release : root.button_release_callback(self), app.manager.delete_image(self) 
+            disabled : True
             source: "images/cancelbuttondisabled.png" if data_cancel_button.disabled == True else "images/cancelbutton.png"
 
         ImageButton:

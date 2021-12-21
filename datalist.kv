@@ -1,6 +1,8 @@
 <DataListBox>:
     dataListLayout : data_list_layout
     orientation: 'vertical'
+    loadFile: load_file
+    saveFile: save_file
     canvas:
         Color:
             rgb: 0.5, 0.5, 0.5
@@ -21,6 +23,28 @@
             text: 'Training Dataset'
             x: root.x + 10
             top: root.top - 20
+        
+        Button:
+            id: save_file
+            text: "Save File"
+            background_color: [1 , 0, 1, 0.6]
+            size_hint: (None, None)
+            size: (80, 30)
+            pos_hint : {'center_x' : 0.92}
+            y : root.y + 10
+            disabled: True
+            on_release: app.manager.save_data(self)
+        
+        Button:
+            id: load_file
+            text: "Load File"
+            background_color: [1 , 0, 1, 0.6]
+            size_hint: (None, None)
+            size: (80, 30)
+            pos_hint : {'center_x' : 0.8}
+            y : root.y + 10
+            disabled: False
+            on_release: app.manager.load_data(self)
 
     DataListLayout:
         id : data_list_layout

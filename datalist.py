@@ -12,6 +12,8 @@ from dataitem import DataItem
 
 class DataListBox (BoxLayout):
     dataListLayout = ObjectProperty(None)
+    loadFile = ObjectProperty(None)
+    saveFile = ObjectProperty(None)
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

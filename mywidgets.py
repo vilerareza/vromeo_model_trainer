@@ -86,10 +86,10 @@ class ButtonBinded(Button):
     def align_top(self, widget, top):
         self.top = top
 
-# class ImageButton (ButtonBehavior, Image):
-#     def __init__(self, **kwargs):
-#         super().__init__(**kwargs)
-#         pass
+class ImageButton (ButtonBehavior, Image):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        pass
 
 class LogoBar (FloatLayout):
     def __init__(self, **kwargs):

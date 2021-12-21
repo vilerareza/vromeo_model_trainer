@@ -8,8 +8,10 @@ Builder.load_file('datatraining.kv')
 
 class DataTrainingBox(FloatLayout):
    
-    nEpoch = NumericProperty()
+    nEpoch = NumericProperty(1)
     epochText = ObjectProperty(None)
+    trainingButton = ObjectProperty(None)
+    saveModelButton = ObjectProperty(None)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -44,7 +46,7 @@ class DataTrainingBox(FloatLayout):
         if button == self.ids.epoch_up_button:
             self.nEpoch += 1
         elif button == self.ids.epoch_down_button:
-            if self.nEpoch > 0:
+            if self.nEpoch > 1:
                 self.nEpoch -= 1
 
     def display_accuracy(self, accuracy = ''):
