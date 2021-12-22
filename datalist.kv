@@ -3,6 +3,8 @@
     orientation: 'vertical'
     loadFile: load_file
     saveFile: save_file
+    deleteFile : delete_file
+    
     canvas:
         Color:
             rgb: 0.5, 0.5, 0.5
@@ -45,6 +47,18 @@
             y : root.y + 10
             disabled: False
             on_release: app.manager.load_data(self)
+        
+        Button:
+            id: delete_file
+            text: "Delete"
+            background_color: [1 , 0, 1, 0.6]
+            size_hint: (None, None)
+            size: (80, 30)
+            pos_hint : {'center_x' : 0.68}
+            y : root.y + 10
+            disabled: True
+            on_release: app.manager.delete_data(self)
+
 
     DataListLayout:
         id : data_list_layout

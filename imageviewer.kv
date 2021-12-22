@@ -30,16 +30,6 @@
         padding : [10]
         size_hint: (1, 1)
         color: 1,1,1,1
-        
-
-    # Image:
-    #     id: add_image_grid
-    #     ImageButton:
-    #         source: "images/cancelbutton.png"
-    #         id: remove_button
-    #         size_hint: None, None
-    #         size: 30, 30
-    #         pos_hint: {'right': 1, 'top': 1}
 
 
     FloatLayout:
@@ -69,4 +59,4 @@
             disabled: True
             source: "images/confirmbuttondisabled.png" if data_confirm_button.disabled == True else "images/confirmbutton.png"
 
-<ImageButton@ButtonBehavior+Image>:
+# <ImageButton@ButtonBehavior+Image>:

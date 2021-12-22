@@ -4,7 +4,8 @@
     orientation : 'vertical'
     size_hint : None,None
     size : 80, 100
-    
+    on_press: app.manager.select_data(self)
+
     BoxLayout :
         size_hint : (1, 0.2) 
         canvas:

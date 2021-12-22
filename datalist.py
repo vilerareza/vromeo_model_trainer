@@ -6,6 +6,7 @@ from kivy.uix.behaviors import FocusBehavior
 from kivy.properties import ObjectProperty 
 from kivy.lang import Builder
 
+
 Builder.load_file('datalist.kv')
 
 from dataitem import DataItem
@@ -14,6 +15,7 @@ class DataListBox (BoxLayout):
     dataListLayout = ObjectProperty(None)
     loadFile = ObjectProperty(None)
     saveFile = ObjectProperty(None)
+    deleteFile = ObjectProperty(None)
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

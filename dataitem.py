@@ -3,10 +3,11 @@ from kivy.graphics import Color, Rectangle
 from kivy.lang import Builder
 from kivy.properties import ObjectProperty
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.behaviors import ButtonBehavior
 
 Builder.load_file('dataitem.kv')
 
-class DataItem(BoxLayout):
+class DataItem(ButtonBehavior ,BoxLayout):
     dataLabel = ObjectProperty(None)
     dataImage = ObjectProperty(None)
     

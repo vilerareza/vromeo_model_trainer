@@ -5,7 +5,7 @@ import threading
 import pickle
 import numpy as np
 
-from tkinter import Tk, filedialog
+from tkinter import Label, Tk, filedialog
 from sklearn import preprocessing
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.models import save_model 
@@ -27,7 +27,7 @@ from datatraining import DataTrainingBox
 from imageprocessor import ImageProcessor
 from imageviewer import ImageViewerBox
 from logobar import LogoBar
-from mywidgets import ImageButton, ButtonBinded
+from mywidgets import ImageButton, ButtonBinded, ColorLabel
 
 Builder.load_file('modeltrainer.kv')
 
@@ -39,6 +39,7 @@ class ModelTrainer(BoxLayout):
     dataListBox = ObjectProperty(None)
     dataTrainingBox = ObjectProperty(None)
     dataDeletedList = ListProperty([])
+    imageDeletedList = ListProperty([])
 
     selectedPath = ''
     newLabel = ''
@@ -74,10 +75,14 @@ class ModelTrainer(BoxLayout):
         self.middleContainerBox.add_widget(self.dataListBox)
 
         # Progress bar
+        self.progressBox =  BoxLayout(orientation = 'vertical', size_hint = (1,1))
         self.progressBar = ProgressBar()
-        self.progressPop = Popup(content = self.progressBar,
+        self.progressPop = Popup(content = self.progressBox,
                                  size_hint=(0.5, 0.2),
                                  auto_dismiss = False)
+        self.label_step = ColorLabel(size_hint = (1, None), height = 20, halign = 'left', font_size = 14)
+        self.progressBox.add_widget(self.label_step)
+        self.progressBox.add_widget(self.progressBar)
         self.progress_value = 0
         self.thread_flag = False
 
@@ -133,15 +138,15 @@ class ModelTrainer(BoxLayout):
             if (os.path.isdir(self.selectedPath) and self.newLabel!=''):
                 # Directory and label valid
                 imageFiles = os.listdir(self.selectedPath)
-                self.progress_step = round(90 / (len(imageFiles * 2)))
+                progress_step = round(90 / (len(imageFiles * 2)))
                 self.imageViewerBox.print_label(self.newLabel)
                 self.progress_value += 5
                 for imageFile in imageFiles:
                     filePath = os.path.join(self.selectedPath, imageFile)
                     img, detectionBox = self.imageProcessor.detect_face(filePath)
-                    self.progress_value += self.progress_step
+                    self.progress_value += progress_step
                     self.create_preview_image(img, box = detectionBox)
-                    self.progress_value += self.progress_step    
+                    self.progress_value += progress_step    
                 
                 self.draw_image_to_grid(self.imageViewerBox.imageGrid)
                 self.progress_value += 5
@@ -165,22 +170,22 @@ class ModelTrainer(BoxLayout):
         print(widget)
         if widget.opacity == 1:
             widget.opacity = 0.3
-            self.dataDeletedList.append((widget.source, widget))
-            print(self.dataDeletedList)
+            self.imageDeletedList.append((widget.source, widget))
+            print(self.imageDeletedList)
         else:
             widget.opacity = 1
-            self.dataDeletedList.remove((widget.source, widget))
-            print(self.dataDeletedList)
+            self.imageDeletedList.remove((widget.source, widget))
+            print(self.imageDeletedList)
         
         #enable cancel button
-        if len(self.dataDeletedList) !=0:
+        if len(self.imageDeletedList) !=0:
             self.imageViewerBox.dataCancelButton.disabled = False
         else:
             self.imageViewerBox.dataCancelButton.disabled = True
 
     def delete_image(self, widget):
         gridLayout = self.imageViewerBox.imageGrid
-        for image in self.dataDeletedList:
+        for image in self.imageDeletedList:
             os.remove(image[0])
             gridLayout.remove_widget(image[1])
             gridLayout.nLive -= 1
@@ -190,9 +195,33 @@ class ModelTrainer(BoxLayout):
         if gridLayout.nLive <= nLiveMin:
             gridLayout.rows -=1
         
-        self.dataDeletedList.clear()
+        self.imageDeletedList.clear()
 
+    def select_data(self, widget):
+        for child in self.dataListBox.dataListLayout.children:
+            if child.dataLabel.text == widget.dataLabel.text:
+                if child.opacity == 1:
+                    child.opacity = 0.3
+                    self.dataDeletedList.append(child)
+                    print(self.dataDeletedList)
+
+                else:
+                    child.opacity = 1
+                    self.dataDeletedList.remove(child)
+                    print(self.dataDeletedList)
         
+        if len(self.dataDeletedList) != 0:
+            self.dataListBox.deleteFile.disabled = False
+        else:
+            self.dataListBox.deleteFile.disabled = True
+    
+    def delete_data(self, widget):
+        for file in self.dataDeletedList:
+            self.dataListBox.dataListLayout.remove_widget(file)
+        
+        self.dataDeletedList.clear()
+        self.dataListBox.deleteFile.disabled = True
+
     @mainthread
     def draw_image_to_grid(self, gridLayout):
         imagePath = 'images/temp/preview/'
@@ -246,6 +275,7 @@ class ModelTrainer(BoxLayout):
             print("No data saved")
     
     def load_data(self, widget):
+        self.dataset.clear()
         self.clear_preview_images('images/temp/dataset/', self.dataListBox.dataListLayout)
         root = Tk()
         root.withdraw()
@@ -257,6 +287,8 @@ class ModelTrainer(BoxLayout):
             try:
                 for label in loaded_dataset.keys():
                     self.add_to_list(loaded_dataset, label)
+                    self.add_data(dataset= self.dataset, label = label, faceList= loaded_dataset[label])
+                    print(self.dataset.keys())
                     print('data loaded')
             except:
                 print("Sorry, we couldnt load your file")
@@ -297,7 +329,7 @@ class ModelTrainer(BoxLayout):
         path = 'images/temp/preview'
         if self.thread_flag:
             imageFiles = os.listdir(path)
-            self.progress_step = round(90 / len(imageFiles))
+            progress_step = round(90 / len(imageFiles))
             faceList=[]
             for imageFile in imageFiles:
                 filePath = os.path.join(path, imageFile)
@@ -305,7 +337,7 @@ class ModelTrainer(BoxLayout):
                 face = self.imageProcessor.extract_face(filePath)
                 if face is not None:
                     faceList.append(face)
-                    self.progress_value += self.progress_step
+                    self.progress_value += progress_step
 
             self.add_data(dataset = self.dataset, label = self.newLabel, faceList = faceList)
             self.progress_value += 5
@@ -314,30 +346,46 @@ class ModelTrainer(BoxLayout):
         self.dismiss()
 
     def start_model_training(self):
+        self.progress_value = 0
+        Clock.schedule_interval(self.clock, 1 / 60)
+        self.progressPop.title = 'Training your images'
+        if self.thread_flag:
         # get training parameter: model, epoch
-        if not self.model:
-            self.nClasses = len(self.dataset)
-            self.model = self.create_model(self.nClasses)
-            print (f'nClasses: {self.nClasses}')
-        if self.model:
-            # Get epoch
-            self.nEpoch = self.get_epoch()
-            # Configure for training
-            self.model.compile(optimizer= optimizers.Adam(learning_rate = 1e-4), loss='categorical_crossentropy', metrics=['categorical_accuracy'])
-            # Get training data
-            self.datasetImages, self.datasetLabels = self.get_training_data()
-            print (str(len(self.datasetImages))+', '+str(type(self.datasetImages)))
-            print (str(len(self.datasetLabels))+', '+str(type(self.datasetLabels)))
-            # Start the training
-            # import pickle
-            # pickle.dump(self.datasetImages,open("datasetimages.p", "wb"))
-            # pickle.dump(self.datasetLabels,open("datasetlabels.p", "wb"))
-            # print('pickle done')
-            history = self.model.fit(self.datasetImages, self.datasetLabels, epochs = self.nEpoch, batch_size = len(self.datasetImages))   #Batch Size?
-            accuracy = int((history.history['categorical_accuracy'][-1])*100)
-            self.dataTrainingBox.display_accuracy(str(accuracy))
-            self.dataTrainingBox.saveModelButton.disabled = False
-            #print (str(accuracy))
+            self.label_step.text = 'Preparing your model'
+            if not self.model:
+                self.nClasses = len(self.dataset)
+                self.model = self.create_model(self.nClasses)
+                print (f'nClasses: {self.nClasses}')
+            if self.model:
+                # Get epoch
+                self.nEpoch = self.get_epoch()
+                print (f'progress value: {self.progress_value}')
+                # Configure for training
+                self.model.compile(optimizer= optimizers.Adam(learning_rate = 1e-4), loss='categorical_crossentropy', metrics=['categorical_accuracy'])
+                self.progress_value += 5
+                print (f'progress value: {self.progress_value}')
+                # Get training data
+                self.label_step.text = 'Getting your training data ready'
+                self.datasetImages, self.datasetLabels = self.get_training_data()
+                self.progress_value += 5
+                print (f'progress value: {self.progress_value}')
+                print (str(len(self.datasetImages))+', '+str(type(self.datasetImages)))
+                print (str(len(self.datasetLabels))+', '+str(type(self.datasetLabels)))
+                progress_step = round(85 / self.nEpoch)
+                print (f'progress value: {self.progress_value}')
+                for epoch in range(self.nEpoch):
+                    self.label_step.text = f'Training your data {epoch + 1} / {self.nEpoch}'
+                    history_model = self.model.fit(self.datasetImages, self.datasetLabels, epochs = 1, batch_size = 5)   #Batch Size?
+                    self.progress_value += progress_step
+                    print (f'progress value: {self.progress_value}')
+
+                accuracy = int((history_model.history['categorical_accuracy'][-1])*100)
+                self.progress_value += 5
+                print (f'progress value: {self.progress_value}')
+                self.label_step.text = 'Count your training accuracy'
+                self.show_accuracy(accuracy)
+                
+        self.dismiss()
 
     def create_model (self, nClasses):
         from vggface import VGGFace
@@ -365,6 +413,12 @@ class ModelTrainer(BoxLayout):
         datasetLabels = preprocess_label.fit_transform(datasetLabels)
         datasetLabels = to_categorical(datasetLabels, num_classes = self.nClasses)
         return datasetImages, datasetLabels
+
+    @mainthread
+    def show_accuracy(self, accuracy):
+        self.dataTrainingBox.display_accuracy(str(accuracy))
+        self.dataTrainingBox.saveModelButton.disabled = False
+
 
     def save_model_to_file(self):
         try:
