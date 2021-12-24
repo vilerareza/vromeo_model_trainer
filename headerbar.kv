@@ -1,0 +1,15 @@
+<HeaderBar>:
+    size_hint : (1,None)
+    height : 40
+    canvas.before:
+        Color:
+            rgb : (0,0,0)
+        Rectangle:
+            size : self.size
+            pos :self.pos
+    Image:
+        source : "images/logo.png"
+        mipmap : True
+        pos_hint : {'left': 1, 'center_y': 0.5}
+        size_hint : (None, None)
+        size : (300, 30)

@@ -15,18 +15,11 @@ from kivy.lang import Builder
 from kivy.metrics import dp
 from kivy.properties import NumericProperty, ObjectProperty, ListProperty
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.image import Image
 from kivy.uix.popup import Popup
 from kivy.uix.progressbar import ProgressBar 
 from kivy.clock import Clock, mainthread
-from kivy.graphics import Color, Rectangle
 
-from dataentry import DataEntryBox
-from datalist import DataListBox
-from datatraining import DataTrainingBox
 from imageprocessor import ImageProcessor
-from imageviewer import ImageViewerBox
-from logobar import LogoBar
 from mywidgets import ImageButton, ButtonBinded, ColorLabel
 
 Builder.load_file('modeltrainer.kv')
@@ -53,27 +46,8 @@ class ModelTrainer(BoxLayout):
     datasetLabels = []
     nClasses = 0
 
-    
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.orientation = 'vertical'
-        # Initialize layout
-        self.logoBar = LogoBar(color=(0,0,0), size_hint = (1,None), height = 40)
-        self.middleContainerBox = BoxLayout (orientation = 'horizontal')
-        self.leftBox = BoxLayout(orientation = "vertical",size_hint = (0.9,1))
-        self.dataEntryBox = DataEntryBox()
-        self.dataListBox = DataListBox()
-        self.imageViewerBox = ImageViewerBox ()
-        self.dataTrainingBox = DataTrainingBox()
-        
-        # Adding to left box
-        self.leftBox.add_widget(self.dataEntryBox)
-        self.leftBox.add_widget(self.imageViewerBox)
-
-        # Adding to container box
-        self.middleContainerBox.add_widget(self.leftBox)
-        self.middleContainerBox.add_widget(self.dataListBox)
-
         # Progress bar
         self.progressBox =  BoxLayout(orientation = 'vertical', size_hint = (1,1))
         self.progressBar = ProgressBar()
@@ -85,13 +59,6 @@ class ModelTrainer(BoxLayout):
         self.progressBox.add_widget(self.progressBar)
         self.progress_value = 0
         self.thread_flag = False
-
-        # Show logo bar
-        self.add_widget(self.logoBar)
-        # Show container box
-        self.add_widget(self.middleContainerBox)
-        # Show data training box
-        self.add_widget(self.dataTrainingBox)
 
         #delete button
         self.deleteButton = ButtonBinded(background_normal = "images/cancelbutton.png",

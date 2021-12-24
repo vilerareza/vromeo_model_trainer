@@ -1,5 +1,5 @@
 from kivy.app import App
-from kivy.properties import ListProperty, ObjectProperty
+from kivy.properties import ObjectProperty
 
 from modeltrainer import ModelTrainer
 

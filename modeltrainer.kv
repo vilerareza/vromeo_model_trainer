@@ -1,15 +1,36 @@
-# #: import modeltrainer modeltrainer
+#: import headerbar headerbar
+#: import dataentry dataentry
+#: import datalist datalist
+#: import imageviewer imageviewer
+#: import datatraining datatraining
 
-# <ModelTrainer>:
-#    dataTrainingBox : data_training_box
-    
-#    DataTrainingBox:
-#        id: data_training_box
+<ModelTrainer>:
 
-# <ModelTrainer>:
-#     ProgressBar:
-#         Popup:
-#             title: 'Please wait while we preprocess your images'
-            
-
+    orientation : 'vertical'
+    middleContainerBox : middle_container_box
+    leftBox : left_box
+    imageViewerBox : image_viewer_box
+    dataEntryBox : data_entry_box
+    dataListBox : data_list_box
+    dataTrainingBox : data_training_box
         
+    HeaderBar
+    BoxLayout:
+        id : middle_container_box
+        orientation : 'horizontal'
+
+        BoxLayout: 
+            id : left_box
+            orientation : 'vertical'
+            size_hint : (0.9,1)
+
+            DataEntryBox:
+                id : data_entry_box
+            ImageViewerBox:
+                id : image_viewer_box
+
+        DataListBox:
+            id : data_list_box
+
+    DataTrainingBox:
+        id : data_training_box
