@@ -57,8 +57,7 @@
             pos_hint : {'center_x' : 0.68}
             y : root.y + 10
             disabled: True
-            on_release: app.manager.delete_data(self)
-
+            on_release: app.manager.delete_data()
 
     DataListLayout:
         id : data_list_layout

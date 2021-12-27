@@ -7,8 +7,8 @@ class ImageProcessor():
         from mtcnn.mtcnn import MTCNN
         self.detector = MTCNN()
 
-    def extract_face(self, image_path, target_size = (224,224)):
-        img, box = self.detect_face(image_path)
+    def extract_face(self, image_path, box, target_size = (224,224)):
+        img = imread(image_path)
         if box:
             x1, y1, width, height = box
             x2, y2 = x1 + width, y1 + height
