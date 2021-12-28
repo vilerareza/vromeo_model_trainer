@@ -57,8 +57,6 @@
             y : button_float.y+3
             text : 'Confirm'
             on_press: root.button_press_callback(self) 
-            on_release : root.button_release_callback(self), app.manager.progressUp(app.manager.add_data)
+            on_release : root.button_release_callback(self), app.manager.add_data()
             disabled: False if (len(image_grid.children)>0) and data_cancel_button.disabled == True else True
             opacity : 0.4 if self.disabled == True else 1
-
-# <ImageButton@ButtonBehavior+Image>:

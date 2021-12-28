@@ -2,7 +2,7 @@ from kivy.graphics import Color, Rectangle
 from kivy.lang import Builder
 from kivy.metrics import dp
 from kivy.uix.floatlayout import FloatLayout
-from kivy.properties import NumericProperty, ObjectProperty
+from kivy.properties import NumericProperty, ObjectProperty, BooleanProperty
 
 Builder.load_file('datatraining.kv')
 
@@ -12,6 +12,7 @@ class DataTrainingBox(FloatLayout):
     epochText = ObjectProperty(None)
     trainingButton = ObjectProperty(None)
     saveModelButton = ObjectProperty(None)
+    trainingEnabled = BooleanProperty(False)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

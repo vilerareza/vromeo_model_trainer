@@ -19,7 +19,7 @@
         center_y: root.center_y # center of layout
         on_press: root.button_press_callback(self)
         on_release : root.button_release_callback(self), app.manager.progressUp(app.manager.start_model_training)
-        disabled : True
+        disabled : False if (root.trainingEnabled == True) else True
         source: "images/starttrainingdisabled.png" if training_start_button.disabled == True else "images/starttraining.png"
     
     ImageButton:

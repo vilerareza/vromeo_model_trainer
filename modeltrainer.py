@@ -4,7 +4,7 @@ import random
 import threading
 import uuid
 from tkinter import Tk, filedialog
-from typing import List
+from typing import List, final
 
 import numpy as np
 from cv2 import imread, imwrite, rectangle
@@ -36,7 +36,8 @@ class ModelTrainer(BoxLayout):
     newLabel = ''
     previewLocation = 'images/temp/preview/'
     preview_face_folder = 'images/temp/preview_face/'
-    
+    dataset_buffer_folder = 'images/temp/dataset_buffer/'
+
     model = None    # Recognition model
     imageProcessor = None   # Detector
     nEpoch = NumericProperty(1)
@@ -58,7 +59,6 @@ class ModelTrainer(BoxLayout):
 
     def progressUp(self, target_function):
         # For review button: target_function = self.review_data()
-        # For confirm button: target_function = self.add_to_dataset()
         self.progressPop.open()
         thread = threading.Thread(target = target_function)
         thread.start()
@@ -109,11 +109,12 @@ class ModelTrainer(BoxLayout):
                 gridLayout.add_widget(ImageButton(source = os.path.join(imagePath, imageFile), fileName = imageFile,
                                                   on_press = self.select_image))
 
-    def clear_images(self, imagesLocation, gridLayout = None):  #REVIEW OK
+    def clear_images(self, imagesLocation = '', gridLayout = None):  #REVIEW OK
         # Removing image files in temp preview directory 
-        images = os.listdir(imagesLocation)
-        for image in images:
-            os.remove(os.path.join(imagesLocation, image))
+        if imagesLocation != '':
+            images = os.listdir(imagesLocation)
+            for image in images:
+                os.remove(os.path.join(imagesLocation, image))
         # Clearing displayed images in image viewer grid layout
         if gridLayout:
             gridLayout.clear_widgets()
@@ -206,19 +207,20 @@ class ModelTrainer(BoxLayout):
     def add_to_dataset(self, dataset, label, faceList):   # REVIEW OK
         # Adding new data and label to dataset
         dataset[label] = faceList
+        # Enable the training
+        self.check_training_ready(self.dataset, self.dataTrainingBox)
 
-    @mainthread
     def add_to_list(self, label, image_location):  #REVIEW OK
         # Prepare random color for databox in the list
         dataColor = (random.random(), random.random(), random.random())
         # draw the new data to the list 
         self.dataListBox.add_item(label = label, fileDir = image_location, color = dataColor)
-        self.dataTrainingBox.trainingButton.disabled = False
+        # Refresh some widgets
         self.refresh()
 
     def add_data(self):   # REVIEW OK
         self.progress_value = 0     # Initialize progress bar value
-        Clock.schedule_interval(self.clock, 1 / 10)
+        Clock.schedule_interval(self.clock, 1 / 5)
         self.progressPop.title = 'Adding images to dataset...'
         imageFiles = os.listdir(self.preview_face_folder)
         progress_step = round(90 / len(imageFiles))     # Progress step calculation
@@ -232,8 +234,15 @@ class ModelTrainer(BoxLayout):
         self.add_to_dataset(dataset = self.dataset, label = self.newLabel, faceList = faceList)
         self.progress_value += 5    # Increase progress by 5% after adding to dataset
         self.add_to_list(label = self.newLabel, image_location = self.preview_face_folder)
+        self.clear_images(self.previewLocation, self.imageViewerBox.imageGrid)
         self.progress_value += 5    # Increase progress by 5% after adding to the list for display
         self.dismiss()
+
+    def refresh(self):  # REVIEW OK
+        self.clear_images(self.previewLocation, self.imageViewerBox.imageGrid)
+        self.imageViewerBox.print_label("")
+        self.dataEntryBox.dataLabelText.text = ""
+        self.dataEntryBox.dataLocationText.text = ""
 
     def select_data(self, widget):      # REVIEW OK
         # Widget is dataItem object
@@ -266,6 +275,8 @@ class ModelTrainer(BoxLayout):
             # Clearing the deletion list
             self.dataToDelete.clear()
             self.dataListBox.deleteFile = False
+            # Check if the training can be enabled
+            self.check_training_ready(self.dataset, self.dataTrainingBox)
         else:
             print ('Nothing to delete. dataToDelete list is empty')
 
@@ -284,7 +295,9 @@ class ModelTrainer(BoxLayout):
         else:
             print ('Nothing to save. Dataset is empty')
     
-    def load_data(self, widget):
+    def load_data(self, widget):    # REVIEW OK
+        # Backup current database first
+        dataset_backup = self.dataset.copy()
         # File selection
         root = Tk()
         root.withdraw()
@@ -293,77 +306,83 @@ class ModelTrainer(BoxLayout):
         if filename:
             # Clearing existing dataset
             self.dataset.clear()
-            self.clear_images(self.preview_face_folder, self.dataListBox.dataListLayout)
+            # Clearing layout
+            self.clear_images(gridLayout = self.dataListBox.dataListLayout)
             # Processing selected file
             file = open(filename, "rb")
-            loaded_dataset = pickle.load(file)
             try:
-                self.dataset = loaded_dataset.copy()
-                self.display_dataset(dataset = self.dataset)
+                loaded_dataset = pickle.load(file)
+                self.dataset = loaded_dataset.copy()    # Copy the dataset from file
+                for label in self.dataset.keys():
+                    self.clear_images(self.dataset_buffer_folder)
+                    self.display_dataset(dataset = self.dataset, label = label)
             except Exception as e:
                 print(f"{e}: Failed loading dataset. Possible cause: wrong dataset file selected")
+                self.dataset = dataset_backup.copy()   # Restore database to previous state
+                for label in self.dataset.keys():
+                    self.clear_images(self.dataset_buffer_folder)
+                    self.display_dataset(dataset = self.dataset, label = label)
+            finally:
+                dataset_backup = None
+                # Check if the training can be enabled
+                self.check_training_ready(self.dataset, self.dataTrainingBox)
         else:
             print("Selection canceled. No data loaded...")
+            dataset_backup = None
     
-    def display_dataset(self, dataset):
-        for label in dataset.keys():
-            #self.clear_images(self.preview_face_folder)
-            for img in dataset[label]:
-                uuidName = uuid.uuid4()
-                writePath = (f'{self.preview_face_folder}{uuidName}.png')
-                imwrite(writePath, img)
-            self.add_to_list(label = label, image_location = self.preview_face_folder)
-            #self.clear_images(self.preview_face_folder)
-            
-            
-    def refresh(self):
-        self.clear_images(self.previewLocation, self.imageViewerBox.imageGrid)
-        self.imageViewerBox.print_label("")
-        self.imageViewerBox.dataCancelButton.disabled = True
-        self.imageViewerBox.dataConfirmButton.disabled = True
-        self.dataEntryBox.dataLabelText.text = ""
-        self.dataEntryBox.dataLocationText.text = ""
+    def display_dataset(self, dataset, label):      # REVIEW OK
+        for img in dataset[label]:
+            uuidName = uuid.uuid4()
+            writePath = (f'{self.dataset_buffer_folder}{uuidName}.png')
+            imwrite(writePath, img)
+        dataColor = (random.random(), random.random(), random.random())     # Prepare random color for databox in the list
+        self.dataListBox.add_item(label = label, fileDir = self.dataset_buffer_folder, color = dataColor)
+
+    def check_training_ready(self, dataset, widget):    # REVIEW OK
+        print (f'len {len(dataset)}')
+        if len(dataset) > 0:
+            widget.trainingEnabled = True
+        else:
+            widget.trainingEnabled = False
 
     def start_model_training(self):
         from tensorflow.keras import optimizers
-        self.progress_value = 0
-        Clock.schedule_interval(self.clock, 1 / 60)
-        self.progressPop.title = 'Training your images'
-        if self.thread_flag:
-        # get training parameter: model, epoch
-            self.label_step.text = 'Preparing your model'
-            if not self.model:
+        self.progress_value = 0     # Initialize progress value
+        Clock.schedule_interval(self.clock, 1 / 3)
+        self.progressPop.title = 'AI model training in progress...'
+        # Create model and get eopch
+        self.progressBox.progressLabel.text = '1 : Preparing AI model'
+        if not self.model:
+            try:
                 self.nClasses = len(self.dataset)
                 self.model = self.create_model(self.nClasses)
                 print (f'nClasses: {self.nClasses}')
-            if self.model:
-                # Get epoch
-                self.nEpoch = self.get_epoch()
+            except Exception as e:
+                print (f'{e}: Failed creating AI model')
+        if self.model:
+            # Get epoch
+            self.nEpoch = self.get_epoch()
+            # Configure for training
+            self.model.compile(optimizer= optimizers.Adam(learning_rate = 1e-4), loss='categorical_crossentropy', metrics=['categorical_accuracy'])
+            self.progress_value += 5    # Increasing progress: Model is ready
+            # Get training data
+            self.progressBox.progressLabel.text = '2 : Getting training data'
+            self.datasetImages, self.datasetLabels = self.get_training_data()
+            self.progress_value += 5    # Increasing progress: Training data is ready
+            print (str(len(self.datasetImages))+', '+str(type(self.datasetImages)))
+            print (str(len(self.datasetLabels))+', '+str(type(self.datasetLabels)))
+            progress_step = round(85 / self.nEpoch)
+            print (f'progress value: {self.progress_value}')
+            for epoch in range(self.nEpoch):
+                self.label_step.text = f'Training your data {epoch + 1} / {self.nEpoch}'
+                history_model = self.model.fit(self.datasetImages, self.datasetLabels, epochs = 1, batch_size = 5)   #Batch Size?
+                self.progress_value += progress_step
                 print (f'progress value: {self.progress_value}')
-                # Configure for training
-                self.model.compile(optimizer= optimizers.Adam(learning_rate = 1e-4), loss='categorical_crossentropy', metrics=['categorical_accuracy'])
-                self.progress_value += 5
-                print (f'progress value: {self.progress_value}')
-                # Get training data
-                self.label_step.text = 'Getting your training data ready'
-                self.datasetImages, self.datasetLabels = self.get_training_data()
-                self.progress_value += 5
-                print (f'progress value: {self.progress_value}')
-                print (str(len(self.datasetImages))+', '+str(type(self.datasetImages)))
-                print (str(len(self.datasetLabels))+', '+str(type(self.datasetLabels)))
-                progress_step = round(85 / self.nEpoch)
-                print (f'progress value: {self.progress_value}')
-                for epoch in range(self.nEpoch):
-                    self.label_step.text = f'Training your data {epoch + 1} / {self.nEpoch}'
-                    history_model = self.model.fit(self.datasetImages, self.datasetLabels, epochs = 1, batch_size = 5)   #Batch Size?
-                    self.progress_value += progress_step
-                    print (f'progress value: {self.progress_value}')
-
-                accuracy = int((history_model.history['categorical_accuracy'][-1])*100)
-                self.progress_value += 5
-                print (f'progress value: {self.progress_value}')
-                self.label_step.text = 'Count your training accuracy'
-                self.show_accuracy(accuracy)
+            accuracy = int((history_model.history['categorical_accuracy'][-1])*100)
+            self.progress_value += 5
+            print (f'progress value: {self.progress_value}')
+            self.label_step.text = 'Count your training accuracy'
+            self.show_accuracy(accuracy)
                 
         self.dismiss()
 
