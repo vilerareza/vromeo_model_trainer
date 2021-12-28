@@ -16,6 +16,7 @@ class DataEntryBox(FloatLayout):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        pass
 
     def button_press_callback(self, widget):
         if widget == self.dataLocationButton:
@@ -23,16 +24,19 @@ class DataEntryBox(FloatLayout):
         elif widget == self.dataReviewButton:
             widget.source = "images/reviewbutton_down.png"
     
+    def button_release_callback(self, widget):
+        if widget == self.dataLocationButton:
+            widget.source = "images/selectfile.png"
+        elif widget == self.dataReviewButton:
+            widget.source = "images/reviewbutton.png"
+    
     def show_load_dialog(self, widget):
         root = Tk()
         root.withdraw()
         dirname = filedialog.askdirectory()
         root.destroy()
         if dirname:
-            print ('Selected dir: '+ dirname)
             self.load_dir(dirname)
-        # Change button appearance
-        widget.source = "images/selectfile.png"
 
     def load_dir(self, dirname):
         # get selection

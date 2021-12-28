@@ -1,7 +1,6 @@
 from cv2 import imread, resize
 import numpy as np
 
-
 class ImageProcessor():
     def __init__(self) -> None:
         from mtcnn.mtcnn import MTCNN

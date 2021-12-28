@@ -3,7 +3,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.stacklayout import StackLayout
 from kivy.uix.behaviors.compoundselection import CompoundSelectionBehavior
 from kivy.uix.behaviors import FocusBehavior
-from kivy.properties import ObjectProperty 
+from kivy.properties import BooleanProperty, ObjectProperty 
 from kivy.lang import Builder
 
 
@@ -14,8 +14,8 @@ from dataitem import DataItem
 class DataListBox (BoxLayout):
     dataListLayout = ObjectProperty(None)
     loadFile = ObjectProperty(None)
-    saveFile = ObjectProperty(None)
-    deleteFile = ObjectProperty(None)
+    saveFile = BooleanProperty(False)
+    deleteFile = BooleanProperty(False)
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

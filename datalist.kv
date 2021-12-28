@@ -1,13 +1,10 @@
 <DataListBox>:
     dataListLayout : data_list_layout
     orientation: 'vertical'
-    loadFile: load_file
-    saveFile: save_file
-    deleteFile : delete_file
     
     canvas:
         Color:
-            rgb: 0.5, 0.5, 0.5
+            rgb: 0.45, 0.45, 0.45
         Rectangle:
             pos: self.pos
             size: self.size
@@ -16,9 +13,13 @@
         id : label_float
         size_hint : (1, None)
         height : 40
+
         Label:
             size_hint : (None, None)
-            size: self.texture_size
+            size: dp(150), dp(20)
+            text_size : self.size
+            halign : 'left'
+            valign : 'middle'
             font_size: 17
             font_family: "arial"
             markup: True
@@ -27,18 +28,16 @@
             top: root.top - 20
         
         Button:
-            id: save_file
             text: "Save File"
             background_color: [1 , 0, 1, 0.6]
             size_hint: (None, None)
             size: (80, 30)
             pos_hint : {'center_x' : 0.92}
             y : root.y + 10
-            disabled: True
+            disabled: False if len(data_list_layout.children) >0 else True
             on_release: app.manager.save_data(self)
         
         Button:
-            id: load_file
             text: "Load File"
             background_color: [1 , 0, 1, 0.6]
             size_hint: (None, None)
@@ -49,16 +48,14 @@
             on_release: app.manager.load_data(self)
         
         Button:
-            id: delete_file
             text: "Delete"
             background_color: [1 , 0, 1, 0.6]
             size_hint: (None, None)
             size: (80, 30)
             pos_hint : {'center_x' : 0.68}
             y : root.y + 10
-            disabled: True
+            disabled: True if root.deleteFile == False else False
             on_release: app.manager.delete_data(self)
-
 
     DataListLayout:
         id : data_list_layout

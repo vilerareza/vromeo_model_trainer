@@ -1,9 +1,9 @@
-
 <ImageViewerBox>:
     labelBox : label_box
     imageGrid : image_grid
     dataCancelButton : data_cancel_button
     dataConfirmButton : data_confirm_button
+    manager : app.manager
 
     orientation: 'vertical'
     canvas:
@@ -31,32 +31,34 @@
         size_hint: (1, 1)
         color: 1,1,1,1
 
-
     FloatLayout:
         id: button_float
         size_hint: (1, 0.1)
+        
         ImageButton:
             id: data_cancel_button
+            source: "images/cancelbuttondisabled.png" if self.disabled else "images/cancelbutton.png" 
             size_hint: None, None
             size: 30, 30
             right : data_confirm_button.x-5
             y : button_float.y+3
             text : 'Cancel'
             on_press: root.button_press_callback(self) 
-            on_release : root.button_release_callback(self), app.manager.delete_image(self) 
+            on_release : root.button_release_callback(self), app.manager.delete_selected_image(self) 
             disabled : True
-            source: "images/cancelbuttondisabled.png" if data_cancel_button.disabled == True else "images/cancelbutton.png"
+            opacity : 0.4 if self.disabled == True else 1
 
         ImageButton:
             id: data_confirm_button
+            source: "images/confirmbuttondisabled.png" if self.disabled else "images/confirmbutton.png" 
             size_hint: None, None
             size: 180, 30
             center_x : button_float.center_x
             y : button_float.y+3
             text : 'Confirm'
             on_press: root.button_press_callback(self) 
-            on_release : root.button_release_callback(self), app.manager.progressUp(app.manager.add_to_dataset)
-            disabled: True
-            source: "images/confirmbuttondisabled.png" if data_confirm_button.disabled == True else "images/confirmbutton.png"
+            on_release : root.button_release_callback(self), app.manager.progressUp(app.manager.add_data)
+            disabled: False if (len(image_grid.children)>0) and data_cancel_button.disabled == True else True
+            opacity : 0.4 if self.disabled == True else 1
 
 # <ImageButton@ButtonBehavior+Image>:

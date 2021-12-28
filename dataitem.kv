@@ -5,6 +5,7 @@
     size_hint : None,None
     size : 80, 100
     on_press: app.manager.select_data(self)
+    opacity: 0.3 if root.selected == True else 1
 
     BoxLayout :
         size_hint : (1, 0.2) 

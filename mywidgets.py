@@ -87,9 +87,11 @@ class ButtonBinded(Button):
         self.top = top
 
 class ImageButton (ButtonBehavior, Image):
-    def __init__(self, **kwargs):
+    selected = False
+    fileName = ''
+    def __init__(self, fileName = '', **kwargs):
         super().__init__(**kwargs)
-        pass
+        self.fileName = fileName
 
 class LogoBar (FloatLayout):
     def __init__(self, **kwargs):
